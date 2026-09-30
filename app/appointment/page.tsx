@@ -2,12 +2,48 @@
 
 import { useState } from "react";
 import { CalendarCheck, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function AppointmentPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const appointment = {
+      name: formData.get("name") as string,
+      phone: formData.get("phone") as string,
+      email: formData.get("email") as string,
+      date: formData.get("date") as string,
+      time: formData.get("time") as string,
+      doctor: formData.get("doctor") as string,
+      reason: formData.get("reason") as string,
+      status: "Pending",
+    };
+
+    const { error } = await supabase
+      .from("appointments")
+      .insert([appointment]);
+
+    setLoading(false);
+
+    if (error) {
+      console.error(error);
+      setError(error.message);
+      return;
+    }
+
+    form.reset();
     setSubmitted(true);
   }
 
@@ -32,8 +68,10 @@ export default function AppointmentPage() {
 
       <section className="bg-white py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+
           {submitted ? (
             <div className="rounded-2xl border border-green-200 bg-green-50 p-10 text-center">
+
               <CheckCircle2
                 size={60}
                 className="mx-auto text-green-600"
@@ -54,13 +92,16 @@ export default function AppointmentPage() {
               >
                 Submit Another Request
               </button>
+
             </div>
           ) : (
             <form
               onSubmit={handleSubmit}
               className="space-y-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10"
             >
+
               <div className="flex items-center gap-3 border-b pb-6">
+
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                   <CalendarCheck size={24} />
                 </div>
@@ -74,9 +115,12 @@ export default function AppointmentPage() {
                     Please provide your information below.
                   </p>
                 </div>
+
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
+
+                {/* NAME */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Full Name
@@ -91,6 +135,7 @@ export default function AppointmentPage() {
                   />
                 </div>
 
+                {/* PHONE */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Phone Number
@@ -105,6 +150,7 @@ export default function AppointmentPage() {
                   />
                 </div>
 
+                {/* EMAIL */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Email
@@ -118,6 +164,7 @@ export default function AppointmentPage() {
                   />
                 </div>
 
+                {/* DATE */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Preferred Date
@@ -131,6 +178,7 @@ export default function AppointmentPage() {
                   />
                 </div>
 
+                {/* TIME */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Preferred Time
@@ -144,6 +192,7 @@ export default function AppointmentPage() {
                   />
                 </div>
 
+                {/* DOCTOR */}
                 <div>
                   <label className="text-sm font-medium text-slate-700">
                     Doctor
@@ -153,14 +202,27 @@ export default function AppointmentPage() {
                     name="doctor"
                     className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   >
-                    <option value="">Any available doctor</option>
-                    <option>Dr. Abebe Bekele</option>
-                    <option>Dr. Hana Tesfaye</option>
-                    <option>Dr. Daniel Alemu</option>
+                    <option value="">
+                      Any available doctor
+                    </option>
+
+                    <option>
+                      Dr. Abebe Bekele
+                    </option>
+
+                    <option>
+                      Dr. Hana Tesfaye
+                    </option>
+
+                    <option>
+                      Dr. Daniel Alemu
+                    </option>
                   </select>
                 </div>
+
               </div>
 
+              {/* REASON */}
               <div>
                 <label className="text-sm font-medium text-slate-700">
                   Reason for Appointment
@@ -174,14 +236,27 @@ export default function AppointmentPage() {
                 />
               </div>
 
+              {/* ERROR */}
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
+              {/* BUTTON */}
               <button
                 type="submit"
-                className="w-full rounded-lg bg-blue-600 px-6 py-3.5 font-semibold text-white hover:bg-blue-700"
+                disabled={loading}
+                className="w-full rounded-lg bg-blue-600 px-6 py-3.5 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Submit Appointment Request
+                {loading
+                  ? "Submitting..."
+                  : "Submit Appointment Request"}
               </button>
+
             </form>
           )}
+
         </div>
       </section>
     </main>
